@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SELENESCAPE — Orbital Safety Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-group">
+      <span class="brand-title">SELENESCAPE</span>
+    </div>
+    <div class="topbar-controls">
+      <div class="sim-clock">
+        <span class="clock-label">MET</span>
+        <span id="sim-clock-value" class="clock-value">T+00:00:00</span>
+      </div>
+      <button id="btn-play-pause" class="btn btn-ghost">PREVIEW · LIVE</button>
+      <button id="btn-open-explorer" class="btn btn-cyan">OPEN EXPLORER</button>
+    </div>
+  </header>
+
+  <main class="main-grid">
+    <section class="shell-card">
+      <div class="shell-header-box">
+        <div class="shell-kicker">3D CISLUNAR ORBITAL SHELL &nbsp;·&nbsp; SIMULATED</div>
+        <div class="shell-subtitle">Nominal Propagated Trajectories · Click Spacecraft to Inspect</div>
+      </div>
+
+      <div id="canvas-container" class="canvas-container"></div>
+
+      <div class="legend-dock">
+        <button id="btn-toggle-legend" class="legend-toggle">HIDE LEGEND</button>
+        <div id="legend-panel" class="legend-panel">
+          <div class="legend-line">
+            <span class="leg-item"><i class="dash dash-cleared"></i> Selected / Cleared</span>
+            <span class="leg-item"><i class="dash dash-nominal"></i> Nominal Orbit</span>
+          </div>
+          <div class="legend-line">
+            <span class="leg-item"><i class="dash dash-watch"></i> Moderate Watch</span>
+          </div>
+          <div class="legend-line">
+            <span class="leg-item"><i class="dash dash-elevated"></i> Elevated Conjunction</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="right-column">
+      <div id="discipline-card" class="discipline-card">
+        <div class="satellite-hero">
+          <canvas id="lidar-hero-canvas"></canvas>
+          <div class="hero-caption">MISSIONSHIELD LIDAR · POLAR MASCON SCAN</div>
+        </div>
+
+        <div class="discipline-body">
+          <div class="discipline-kicker">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span>CONJUNCTION &amp; END-OF-LIFE DISCIPLINE</span>
+          </div>
+          <p class="discipline-text">
+            Lunar mascon gravity perturbations rapidly destabilize unmonitored low polar orbits.
+            MissionShield models miss distances and enforces end-of-life passivation across every mission phase.
+          </p>
+          <button id="btn-toggle-console" class="console-cta-btn">
+            <span>OPEN ORBITAL SAFETY CONSOLE</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="safety-console" class="safety-console hidden">
+        <div class="console-topbar">
+          <span class="console-title">MISSIONSHIELD ORBITAL SAFETY CONSOLE</span>
+          <div class="console-mini-actions">
+            <button id="btn-step" class="btn-mini">+10M STEP</button>
+            <button id="btn-reset" class="btn-mini">RESET</button>
+            <button id="btn-close-console" class="btn-mini">OVERVIEW ✕</button>
+          </div>
+        </div>
+
+        <div class="console-block">
+          <div class="block-head">
+            <span>ACTIVE CONJUNCTION ALERTS</span>
+            <span id="alert-count-badge" class="pill-danger">0 ALERTS</span>
+          </div>
+          <div id="alerts-list" class="alerts-list"></div>
+        </div>
+
+        <div class="console-block">
+          <div class="block-head">
+            <span>TRACKED SPACECRAFT TELEMETRY</span>
+            <select id="spacecraft-select" class="sc-select"></select>
+          </div>
+          <div id="telemetry-grid" class="telemetry-grid"></div>
+        </div>
+
+        <div class="console-block">
+          <div class="block-head">
+            <span>COLLISION-AVOIDANCE ΔV SIMULATOR</span>
+            <span id="fuel-remaining-label" class="mono-dim">FUEL: -- m/s</span>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-meta"><span>PROGRADE / RETROGRADE (ΔVt)</span><span id="val-prograde" class="cyan">0.0 m/s</span></div>
+            <input id="slider-prograde" type="range" min="-25" max="25" step="0.5" value="0" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-meta"><span>NORMAL / INCLINATION (ΔVn)</span><span id="val-normal" class="cyan">0.0 m/s</span></div>
+            <input id="slider-normal" type="range" min="-25" max="25" step="0.5" value="0" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-meta"><span>RADIAL (ΔVr)</span><span id="val-radial" class="cyan">0.0 m/s</span></div>
+            <input id="slider-radial" type="range" min="-25" max="25" step="0.5" value="0" />
+          </div>
+
+          <div class="preview-strip">
+            <div><span>MIN MISS DIST</span><strong id="preview-miss">-- km</strong></div>
+            <div><span>TOTAL ΔV</span><strong id="preview-dv">0.00 m/s</strong></div>
+            <div><span>CORRIDOR</span><strong id="preview-status">NOMINAL</strong></div>
+          </div>
+
+          <div class="burn-buttons">
+            <button id="btn-auto-solve" class="btn-outline">AUTO-COMPUTE SAFE BURN</button>
+            <button id="btn-execute-burn" class="btn-cyan">EXECUTE AVOIDANCE BURN</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
