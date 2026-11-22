@@ -1,1 +1,1 @@
-{ "rewrites": [{ "source": "/(.*)", "destination": "/backend/main.py" }] }
+{ "rewrites": [{ "source": "/(.*)", "destination": "/main.py" }] }
